@@ -16,10 +16,5 @@
     },
     "autoload": {
         "psr-4": { "Nmure\\EncryptorBundle\\": "" }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.x-dev"
-        }
     }
 }

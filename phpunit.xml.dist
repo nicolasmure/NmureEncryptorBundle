@@ -2,6 +2,10 @@
 
 <phpunit bootstrap="./Tests/bootstrap.php" colors="true">
 
+    <logging>
+        <log type="coverage-clover" target="build/logs/clover.xml" />
+    </logging>
+
     <testsuites>
         <testsuite name="NmureEncryptorBundle test suite">
             <directory suffix="Test.php">./Tests</directory>
@@ -12,6 +16,7 @@
         <whitelist>
             <directory>./</directory>
             <exclude>
+                <directory>./build</directory>
                 <directory>./Resources</directory>
                 <directory>./Tests</directory>
                 <directory>./vendor</directory>

@@ -1,6 +1,7 @@
 # NmureEncryptorBundle
 
 [![Build Status](https://travis-ci.org/nicolasmure/NmureEncryptorBundle.svg?branch=master)](https://travis-ci.org/nicolasmure/NmureEncryptorBundle)
+[![Coverage Status](https://coveralls.io/repos/github/nicolasmure/NmureEncryptorBundle/badge.svg?branch=master)](https://coveralls.io/github/nicolasmure/NmureEncryptorBundle?branch=master)
 
 A data encryptor Bundle for Symfony using PHP's openssl.
 

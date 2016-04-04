@@ -12,7 +12,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require nmure/encryptor-bundle "dev-master"
+$ composer require nmure/encryptor-bundle "~0.1.0"
 ```
 
 This command requires you to have Composer installed globally, as explained

@@ -43,6 +43,7 @@ Add the following configuration to your `config.yml` file :
 # app/config/config.yml
 nmure_encryptor:
     secret: theSecretKeyGoesHere # should be a complex key defined in your parameters.yml file
+    prefer_base64: true # optional, default true. Indicates if the encrypted data should be converted to base64
 ```
 
 ## Usage
@@ -71,6 +72,19 @@ void Encryptor::setIv(string $iv);
 ```
 Be sure to store the initialization vector used to crypt data along side to the crypted data
 to be able to decrypt it later.
+
+If the `prefer_base64` config setting is set to `true`, the encrypted data will be converted to a MIME base64 string
+instead of staying a binary string.
+The itinialization vector will also be converted to a base64 string.
+
+## Services
+This Bundle exposes the following services which are returning a `Nmure\EncryptorBundle\Encryptor\EncryptorInterface`:
+- `nmure_encryptor.encryptor`: alias for `nmure_encryptor.encryptor.original` or `nmure_encryptor.adapter.base64`
+(depends on the value of the `prefer_base64` config parameter).
+- `nmure_encryptor.encryptor.original`: the original encryptor which returns encrypted data as a binary string
+(`Nmure\EncryptorBundle\Encryptor\Encryptor`).
+- `nmure_encryptor.adapter.base64`: the base64 adapter which returns encrypted data as a MIME base64 string
+(`Nmure\EncryptorBundle\Adapter\Base64Adapter`).
 
 ## Informations
 Useful informations about:

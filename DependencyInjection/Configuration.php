@@ -26,6 +26,9 @@ class Configuration implements ConfigurationInterface
                     ->isRequired()
                     ->cannotBeEmpty()
                 ->end()
+                ->booleanNode('prefer_base64')
+                    ->defaultTrue()
+                ->end()
             ->end()
         ;
 

@@ -38,7 +38,25 @@ class NmureEncryptorExtensionTest extends TestCase
         $loader->load(array($config), $configuration);
 
         $this->assertEquals($configuration->getParameter('nmure_encryptor.secret'), 'iAmTheSecretKey');
+
+        $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\EncryptorInterface', $configuration->get('nmure_encryptor.encryptor'));
+        // default setting
+        $this->assertInstanceOf('Nmure\EncryptorBundle\Adapter\Base64Adapter', $configuration->get('nmure_encryptor.encryptor'));
+        // assert same instance (alias)
+        $this->assertTrue($configuration->get('nmure_encryptor.encryptor') === $configuration->get('nmure_encryptor.adapter.base64'));
+    }
+
+    public function testPreferOriginalEncryptor()
+    {
+        $configuration = new ContainerBuilder();
+        $loader = new NmureEncryptorExtension();
+        $config = $this->getOriginalEncryptorConfig();
+        $loader->load(array($config), $configuration);
+
+        $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\EncryptorInterface', $configuration->get('nmure_encryptor.encryptor'));
         $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\Encryptor', $configuration->get('nmure_encryptor.encryptor'));
+        // assert same instance (alias)
+        $this->assertTrue($configuration->get('nmure_encryptor.encryptor') === $configuration->get('nmure_encryptor.encryptor.original'));
     }
 
     private function getEmptySecretConfig()
@@ -54,6 +72,16 @@ EOF;
     {
         $yaml = <<<EOF
 secret: iAmTheSecretKey
+EOF;
+        $parser = new Parser();
+        return $parser->parse($yaml);
+    }
+
+    private function getOriginalEncryptorConfig()
+    {
+        $yaml = <<<EOF
+secret: iAmTheSecretKey
+prefer_base64: false
 EOF;
         $parser = new Parser();
         return $parser->parse($yaml);

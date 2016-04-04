@@ -2,7 +2,7 @@
 
 namespace Nmure\EncryptorBundle\Encryptor;
 
-class Encryptor
+class Encryptor implements EncryptorInterface
 {
     /**
      * @var string
@@ -27,8 +27,7 @@ class Encryptor
     }
 
     /**
-     * @param  string $data Data to encrypt.
-     * @return string       Encrypted data.
+     * {@inheritdoc}
      */
     public function encrypt($data)
     {
@@ -36,16 +35,15 @@ class Encryptor
     }
 
     /**
-     * @param  string $crypted Encypted data.
-     * @return string          Decrypted data.
+     * {@inheritdoc}
      */
-    public function decrypt($crypted)
+    public function decrypt($encrypted)
     {
-        return openssl_decrypt($crypted, 'AES-256-CBC', $this->secret, OPENSSL_RAW_DATA, $this->iv);
+        return openssl_decrypt($encrypted, 'AES-256-CBC', $this->secret, OPENSSL_RAW_DATA, $this->iv);
     }
 
     /**
-     * @return string The Initialization Vector.
+     * {@inheritdoc}
      */
     public function getIv()
     {
@@ -53,7 +51,7 @@ class Encryptor
     }
 
     /**
-     * @param string $iv The Initialization Vector to set.
+     * {@inheritdoc}
      */
     public function setIv($iv)
     {

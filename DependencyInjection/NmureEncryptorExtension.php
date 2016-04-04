@@ -26,5 +26,11 @@ class NmureEncryptorExtension extends Extension
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
+
+        if ($config['prefer_base64']) {
+            $container->setAlias('nmure_encryptor.encryptor', 'nmure_encryptor.adapter.base64');
+        } else {
+            $container->setAlias('nmure_encryptor.encryptor', 'nmure_encryptor.encryptor.original');
+        }
     }
 }

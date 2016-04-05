@@ -5,6 +5,8 @@
 
 A data encryptor Bundle for Symfony using PHP's openssl.
 
+**Warning:** This Bundle is still under development and shouldn't be used in production yet.
+
 ## Installation
 ### Step 1: Download the Bundle
 

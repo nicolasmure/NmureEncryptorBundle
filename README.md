@@ -14,7 +14,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require nmure/encryptor-bundle "~0.1.0"
+$ composer require nmure/encryptor-bundle "~0.2.0"
 ```
 
 This command requires you to have Composer installed globally, as explained
@@ -45,17 +45,25 @@ Add the following configuration to your `config.yml` file :
 ```yaml
 # app/config/config.yml
 nmure_encryptor:
-    secret: theSecretKeyGoesHere # should be a complex key defined in your parameters.yml file
-    prefer_base64: true # optional, default true. Indicates if the encrypted data should be converted to base64
+    encryptors:
+        my_encryptor:
+            secret: theSecretKeyGoesHere # should be a complex key defined in your parameters.yml file
+        # you can add as many encryptors as you want
+        my_other_encryptor:
+            secret: myOtherSecretKey # you should use one unique secret key by encryptor
+            prefer_base64: false # optional, default true.
+                                 # Indicates if the encrypted data should be converted to base64
 ```
 
 ## Usage
-The encryptor is defined as a service under the `nmure_encryptor.encryptor` key.
+You can access to the encryptors defined in the `config.yml` file by specifying your encryptor's name, e.g. :
+accessing to `nmure_encryptor.my_encryptor` will return the encryptor defined under the `my_encryptor` key.
 
-Simply access to this service and call the `encrypt` / `decrypt` functions :
+All the encryptors are implementing the `Nmure\EncryptorBundle\Encryptor\EncryptorInterface`.
+To use them, call the `encrypt` / `decrypt` functions :
 ```php
 // from a controller :
-$encryptor = $this->get('nmure_encryptor.encryptor');
+$encryptor = $this->get('nmure_encryptor.my_encryptor');
 $encrypted = $encryptor->encrypt('hello world');
 // ...
 $decrypted = $encryptor->decrypt($encrypted);
@@ -70,8 +78,8 @@ otherwise, your data won't be readable.
 
 You can access to the initialization vector on the encryptor using these functions:
 ```php
-string Encryptor::getIv();
-void Encryptor::setIv(string $iv);
+string EncryptorInterface::getIv();
+void EncryptorInterface::setIv(string $iv);
 ```
 Be sure to store the initialization vector used to crypt data along side to the crypted data
 to be able to decrypt it later.
@@ -79,15 +87,6 @@ to be able to decrypt it later.
 If the `prefer_base64` config setting is set to `true`, the encrypted data will be converted to a MIME base64 string
 instead of staying a binary string.
 The itinialization vector will also be converted to a base64 string.
-
-## Services
-This Bundle exposes the following services which are returning a `Nmure\EncryptorBundle\Encryptor\EncryptorInterface`:
-- `nmure_encryptor.encryptor`: alias for `nmure_encryptor.encryptor.original` or `nmure_encryptor.adapter.base64`
-(depends on the value of the `prefer_base64` config parameter).
-- `nmure_encryptor.encryptor.original`: the original encryptor which returns encrypted data as a binary string
-(`Nmure\EncryptorBundle\Encryptor\Encryptor`).
-- `nmure_encryptor.adapter.base64`: the base64 adapter which returns encrypted data as a MIME base64 string
-(`Nmure\EncryptorBundle\Adapter\Base64Adapter`).
 
 ## Informations
 Useful informations about:

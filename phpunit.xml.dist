@@ -17,7 +17,6 @@
             <directory>./</directory>
             <exclude>
                 <directory>./build</directory>
-                <directory>./Resources</directory>
                 <directory>./Tests</directory>
                 <directory>./vendor</directory>
             </exclude>

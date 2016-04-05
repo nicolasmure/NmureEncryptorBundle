@@ -5,7 +5,7 @@ namespace Nmure\EncryptorBundle\DependencyInjection;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
-use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * This is the class that loads and manages your bundle configuration.
@@ -15,6 +15,13 @@ use Symfony\Component\DependencyInjection\Loader;
 class NmureEncryptorExtension extends Extension
 {
     /**
+     * Indicates if the compilation of the container is required.
+     * 
+     * @var boolean
+     */
+    private $isCompilationRequired;
+
+    /**
      * {@inheritdoc}
      */
     public function load(array $configs, ContainerBuilder $container)
@@ -22,15 +29,35 @@ class NmureEncryptorExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter('nmure_encryptor.secret', $config['secret']);
+        foreach ($config['encryptors'] as $name => $settings) {
+            $this->configureEncryptor($name, $settings, $container);
+        }
 
-        $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('services.xml');
+        // resolving decorated services if needed
+        if ($this->isCompilationRequired) {
+            $container->compile();
+        }
+    }
 
-        if ($config['prefer_base64']) {
-            $container->setAlias('nmure_encryptor.encryptor', 'nmure_encryptor.adapter.base64');
-        } else {
-            $container->setAlias('nmure_encryptor.encryptor', 'nmure_encryptor.encryptor.original');
+    /**
+     * @param  string           $name      Encryptor's name
+     * @param  array            $settings  Encryptor's settings
+     * @param  ContainerBuilder $container
+     */
+    private function configureEncryptor($name, array $settings, ContainerBuilder $container)
+    {
+        $serviceName = sprintf('nmure_encryptor.%s', $name);
+        $container->register($serviceName, 'Nmure\EncryptorBundle\Encryptor\Encryptor')
+            ->addArgument($settings['secret']);
+
+        if ($settings['prefer_base64']) {
+            $decoratorServiceName = sprintf('nmure_encryptor.adapter.base64.%s', $name);
+            $container->register($decoratorServiceName, 'Nmure\EncryptorBundle\Adapter\Base64Adapter')
+                ->addArgument(new Reference(sprintf('%s.inner', $decoratorServiceName)))
+                ->setPublic(false)
+                ->setDecoratedService($serviceName);
+
+            $this->isCompilationRequired = true;
         }
     }
 }

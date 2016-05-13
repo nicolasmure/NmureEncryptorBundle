@@ -7,6 +7,8 @@ use Symfony\Bundle\FrameworkBundle\Tests\TestCase;
 abstract class EncryptorInterfaceTestHelper extends TestCase
 {
     protected $secret = 'thisIsMySecretTestingKey';
+    protected $cipher = 'AES-256-CBC';
+    protected $ivLength = 16;
     protected $data = 'Lorem ipsum dolor';
 
     public function testDefaultEncryptDecrypt()

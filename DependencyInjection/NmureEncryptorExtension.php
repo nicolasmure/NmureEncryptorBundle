@@ -6,6 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 /**
  * This is the class that loads and manages your bundle configuration.
@@ -14,13 +15,6 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 class NmureEncryptorExtension extends Extension
 {
-    /**
-     * Indicates if the compilation of the container is required.
-     * 
-     * @var boolean
-     */
-    private $isCompilationRequired;
-
     /**
      * {@inheritdoc}
      */
@@ -32,11 +26,6 @@ class NmureEncryptorExtension extends Extension
         foreach ($config['encryptors'] as $name => $settings) {
             $this->configureEncryptor($name, $settings, $container);
         }
-
-        // resolving decorated services if needed
-        if ($this->isCompilationRequired) {
-            $container->compile();
-        }
     }
 
     /**
@@ -46,9 +35,13 @@ class NmureEncryptorExtension extends Extension
      */
     private function configureEncryptor($name, array $settings, ContainerBuilder $container)
     {
+        $this->assertSupportedCipher($settings['cipher']);
+
         $serviceName = sprintf('nmure_encryptor.%s', $name);
         $container->register($serviceName, 'Nmure\EncryptorBundle\Encryptor\Encryptor')
-            ->addArgument($settings['secret']);
+            ->addArgument($settings['secret'])
+            ->addArgument($settings['cipher'])
+            ->addArgument($settings['iv_length']);
 
         if ($settings['prefer_base64']) {
             $decoratorServiceName = sprintf('nmure_encryptor.adapter.base64.%s', $name);
@@ -56,8 +49,25 @@ class NmureEncryptorExtension extends Extension
                 ->addArgument(new Reference(sprintf('%s.inner', $decoratorServiceName)))
                 ->setPublic(false)
                 ->setDecoratedService($serviceName);
+        }
+    }
 
-            $this->isCompilationRequired = true;
+    /**
+     * Asserts the given cipher is supported.
+     * 
+     * @param  string $cipher
+     * 
+     * @throws InvalidConfigurationException When the given cipher is not supported.
+     */
+    private function assertSupportedCipher($cipher)
+    {
+        $supportedCiphers = openssl_get_cipher_methods();
+        if (!in_array($cipher, $supportedCiphers)) {
+            throw new InvalidConfigurationException(sprintf(
+                '%s cipher method is not supported. The supported cipher methods by your php installation are %s .',
+                $cipher,
+                implode(', ', $supportedCiphers)
+            ));
         }
     }
 }

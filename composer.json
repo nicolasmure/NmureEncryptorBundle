@@ -1,7 +1,7 @@
 {
     "name": "nmure/encryptor-bundle",
     "type": "symfony-bundle",
-    "description": "Symfony data encryptor bundle using open_ssl",
+    "description": "A data encryptor Bundle for Symfony using PHP's openssl",
     "keywords": ["encryption", "encrypt", "decrypt", "data", "open", "ssl", "security", "hash"],
     "license": "MIT",
     "authors": [

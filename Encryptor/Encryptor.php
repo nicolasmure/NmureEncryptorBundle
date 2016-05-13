@@ -5,9 +5,16 @@ namespace Nmure\EncryptorBundle\Encryptor;
 class Encryptor implements EncryptorInterface
 {
     /**
+     * The encryption key.
      * @var string
      */
     private $secret;
+
+    /**
+     * The cipher method.
+     * @var string
+     */
+    private $cipher;
 
     /**
      * Initialization Vector.
@@ -19,11 +26,14 @@ class Encryptor implements EncryptorInterface
      * Constructor.
      * 
      * @param string $secret The encryption key.
+     * @param string $cipher The cipher method
+     * @param int    $ivLength The length of Initialization Vector, in number of bytes.
      */
-    public function __construct($secret)
+    public function __construct($secret, $cipher, $ivLength)
     {
         $this->secret = $secret;
-        $this->iv = openssl_random_pseudo_bytes(16);
+        $this->cipher = $cipher;
+        $this->iv = openssl_random_pseudo_bytes($ivLength);
     }
 
     /**
@@ -31,7 +41,7 @@ class Encryptor implements EncryptorInterface
      */
     public function encrypt($data)
     {
-        return openssl_encrypt($data, 'AES-256-CBC', $this->secret, OPENSSL_RAW_DATA, $this->iv);
+        return openssl_encrypt($data, $this->cipher, $this->secret, OPENSSL_RAW_DATA, $this->iv);
     }
 
     /**
@@ -39,7 +49,7 @@ class Encryptor implements EncryptorInterface
      */
     public function decrypt($encrypted)
     {
-        return openssl_decrypt($encrypted, 'AES-256-CBC', $this->secret, OPENSSL_RAW_DATA, $this->iv);
+        return openssl_decrypt($encrypted, $this->cipher, $this->secret, OPENSSL_RAW_DATA, $this->iv);
     }
 
     /**

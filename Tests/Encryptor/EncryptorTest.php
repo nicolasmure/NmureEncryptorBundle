@@ -11,6 +11,6 @@ class EncryptorTest extends EncryptorInterfaceTestHelper
      */
     protected function getConcreteEncryptor()
     {
-        return new Encryptor($this->secret);
+        return new Encryptor($this->secret, $this->cipher, $this->ivLength);
     }
 }

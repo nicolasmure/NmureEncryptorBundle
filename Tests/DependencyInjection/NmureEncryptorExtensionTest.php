@@ -61,6 +61,24 @@ class NmureEncryptorExtensionTest extends TestCase
         $loader->load(array($config), new ContainerBuilder());
     }
 
+    /**
+     * @expectedException Symfony\Component\Config\Definition\Exception\InvalidConfigurationException
+     * @expectedExceptionMessage cipher method is not supported
+     */
+    public function testUnsupportedCipherMethod()
+    {
+        $loader = new NmureEncryptorExtension();
+        $config = array(
+            'encryptors' => array(
+                'first_encryptor' => array(
+                    'secret' => 'iAmTheFirstSecretKey',
+                    'cipher' => 'unsupportedCipher',
+                ),
+            ),
+        );
+        $loader->load(array($config), new ContainerBuilder());
+    }
+
     public function testValidConfiguration()
     {
         $configuration = new ContainerBuilder();
@@ -73,6 +91,7 @@ class NmureEncryptorExtensionTest extends TestCase
             ),
         );
         $loader->load(array($config), $configuration);
+        $configuration->compile();
 
         $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\EncryptorInterface', $configuration->get('nmure_encryptor.first_encryptor'));
         // default setting

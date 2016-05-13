@@ -14,7 +14,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require nmure/encryptor-bundle "~0.2.0"
+$ composer require nmure/encryptor-bundle "~0.3.0"
 ```
 
 This command requires you to have Composer installed globally, as explained
@@ -48,6 +48,9 @@ nmure_encryptor:
     encryptors:
         my_encryptor:
             secret: theSecretKeyGoesHere # should be a complex key defined in your parameters.yml file
+            cipher: AES-256-CBC # optional, default to AES-256-CBC
+            # the length of the Initialization Vector, in number of bytes
+            iv_length: 16 # optional, default 16 (according to the default cipher)
         # you can add as many encryptors as you want
         my_other_encryptor:
             secret: myOtherSecretKey # you should use one unique secret key by encryptor
@@ -99,3 +102,6 @@ More informations in the [LICENSE](/LICENSE) file.
 
 ## Issues / feature requests
 Please use this Github repository page to report issues and to ask / propose feature.
+
+## Changes
+See the [changelog](/CHANGELOG.md "changelog") for more infos.

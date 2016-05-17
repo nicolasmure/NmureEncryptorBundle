@@ -27,13 +27,12 @@ class Encryptor implements EncryptorInterface
      * 
      * @param string $secret The encryption key.
      * @param string $cipher The cipher method
-     * @param int    $ivLength The length of Initialization Vector, in number of bytes.
      */
-    public function __construct($secret, $cipher, $ivLength)
+    public function __construct($secret, $cipher)
     {
         $this->secret = $secret;
         $this->cipher = $cipher;
-        $this->iv = openssl_random_pseudo_bytes($ivLength);
+        $this->iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->cipher));
     }
 
     /**

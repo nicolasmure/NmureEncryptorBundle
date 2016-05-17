@@ -40,8 +40,7 @@ class NmureEncryptorExtension extends Extension
         $serviceName = sprintf('nmure_encryptor.%s', $name);
         $container->register($serviceName, 'Nmure\EncryptorBundle\Encryptor\Encryptor')
             ->addArgument($settings['secret'])
-            ->addArgument($settings['cipher'])
-            ->addArgument($settings['iv_length']);
+            ->addArgument($settings['cipher']);
 
         if ($settings['prefer_base64']) {
             $decoratorServiceName = sprintf('nmure_encryptor.adapter.base64.%s', $name);

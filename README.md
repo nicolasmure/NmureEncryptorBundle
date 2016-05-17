@@ -49,8 +49,6 @@ nmure_encryptor:
         my_encryptor:
             secret: theSecretKeyGoesHere # should be a complex key defined in your parameters.yml file
             cipher: AES-256-CBC # optional, default to AES-256-CBC
-            # the length of the Initialization Vector, in number of bytes
-            iv_length: 16 # optional, default 16 (according to the default cipher)
         # you can add as many encryptors as you want
         my_other_encryptor:
             secret: myOtherSecretKey # you should use one unique secret key by encryptor

@@ -42,7 +42,7 @@ class Base64AdapterTest extends AbstractAdapterTestHelper
      */
     protected function getConcreteEncryptor()
     {
-        $this->encryptor = new Encryptor($this->secret, $this->cipher, $this->ivLength);
+        $this->encryptor = new Encryptor($this->secret, $this->cipher);
         return new Base64Adapter($this->encryptor);
     }
 }

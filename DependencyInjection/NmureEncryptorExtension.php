@@ -4,6 +4,7 @@ namespace Nmure\EncryptorBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -20,6 +21,9 @@ class NmureEncryptorExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container)
     {
+        $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader->load('services.xml');
+
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
@@ -37,25 +41,29 @@ class NmureEncryptorExtension extends Extension
     {
         $this->assertSupportedCipher($settings['cipher']);
 
+        if (isset($settings['convert_hex_key_to_bin']) && $settings['convert_hex_key_to_bin']) {
+            $settings['secret'] = $this->convertHexKeyToBin($settings['secret']);
+        }
+
         $serviceName = sprintf('nmure_encryptor.%s', $name);
-        $container->register($serviceName, 'Nmure\EncryptorBundle\Encryptor\Encryptor')
+        $container->register($serviceName, 'Nmure\Encryptor\Encryptor')
             ->addArgument($settings['secret'])
             ->addArgument($settings['cipher']);
 
-        if ($settings['prefer_base64']) {
-            $decoratorServiceName = sprintf('nmure_encryptor.adapter.base64.%s', $name);
-            $container->register($decoratorServiceName, 'Nmure\EncryptorBundle\Adapter\Base64Adapter')
-                ->addArgument(new Reference(sprintf('%s.inner', $decoratorServiceName)))
-                ->setPublic(false)
-                ->setDecoratedService($serviceName);
+        if (isset($settings['formatter'])) {
+            $this->configureFormatter($serviceName, $settings['formatter'], $container);
+        }
+
+        if (isset($settings['disable_auto_iv_update']) && $settings['disable_auto_iv_update']) {
+            $this->disableAutoIvUpdate($serviceName, $container);
         }
     }
 
     /**
      * Asserts the given cipher is supported.
-     * 
+     *
      * @param  string $cipher
-     * 
+     *
      * @throws InvalidConfigurationException When the given cipher is not supported.
      */
     private function assertSupportedCipher($cipher)
@@ -68,5 +76,51 @@ class NmureEncryptorExtension extends Extension
                 implode(', ', $supportedCiphers)
             ));
         }
+    }
+
+    /**
+     * Converts the secret hex key to a binary key if specified.
+     *
+     * @param  string $secret The secret key to convert.
+     *
+     * @throws InvalidConfigurationException When not able to convert the key.
+     */
+    private function convertHexKeyToBin($secret)
+    {
+        if (false === ($converted = @hex2bin($secret))) {
+            throw new InvalidConfigurationException(sprintf('The secret key "%s" is not a valid hex key', $secret));
+        }
+
+        return $converted;
+    }
+
+    /**
+     * Configure and set the formatter to the current encryptor.
+     *
+     * @param  string           $encryptorName Encryptor's service name
+     * @param  string           $formatterName Formatter's service name
+     * @param  ContainerBuilder $container
+     *
+     * @throws Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException When not able to find the formatter's service.
+     */
+    private function configureFormatter($encryptorName, $formatterName, ContainerBuilder $container)
+    {
+        // throws an exception if the formatter's service does not exists
+        $container->getDefinition($formatterName);
+
+        $container->getDefinition($encryptorName)
+            ->addMethodCall('setFormatter', array(new Reference($formatterName)));
+    }
+
+    /**
+     * Disable the automatic IV update for the current encryptor.
+     *
+     * @param  string           $encryptorName Encryptor's service name.
+     * @param  ContainerBuilder $container
+     */
+    private function disableAutoIvUpdate($encryptorName, ContainerBuilder $container)
+    {
+        $container->getDefinition($encryptorName)
+            ->addMethodCall('disableAutoIvUpdate');
     }
 }

@@ -1,18 +1,20 @@
 {
     "name": "nmure/encryptor-bundle",
     "type": "symfony-bundle",
-    "description": "A data encryptor Bundle for Symfony using PHP's openssl",
-    "keywords": ["encryption", "encrypt", "decrypt", "data", "open", "ssl", "security", "hash"],
+    "description": "A Symfony Bundle for the nmure/encryptor library",
+    "keywords": ["encryption", "encrypt", "decrypt", "data", "open", "ssl", "security", "hash", "symfony", "bundle"],
     "license": "MIT",
     "authors": [
         {
             "name": "Nicolas MURE",
-            "email": "nm2107@hotmail.fr"
+            "email": "nm2107@hotmail.fr",
+            "homepage": "https://github.com/nicolasmure"
         }
     ],
     "require": {
         "php": ">=5.4",
-        "symfony/framework-bundle": "~2.3|~3.0"
+        "symfony/framework-bundle": "~2.3|~3.0",
+        "nmure/encryptor": "dev-master"
     },
     "autoload": {
         "psr-4": { "Nmure\\EncryptorBundle\\": "" }

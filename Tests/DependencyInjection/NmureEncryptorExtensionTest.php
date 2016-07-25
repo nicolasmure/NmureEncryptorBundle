@@ -5,18 +5,37 @@ namespace Nmure\EncryptorBundle\Tests\DependencyInjection;
 use Symfony\Bundle\FrameworkBundle\Tests\TestCase;
 use Nmure\EncryptorBundle\DependencyInjection\NmureEncryptorExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\Yaml\Parser;
+use Nmure\Encryptor\Encryptor;
+use Nmure\Encryptor\Formatter\Base64Formatter;
+use Nmure\Encryptor\Formatter\HexFormatter;
 
 class NmureEncryptorExtensionTest extends TestCase
 {
+    private $secret = '452F93C1A737722D8B4ED8DD58766D99';
+    private $secondSecret = '6A4E723D3F4AA81ACF776DCF2B6AEC45';
+    private $cipher = 'AES-256-CBC';
+    private $data = 'Lorem ipsum dolor';
+    private $loader;
+    private $configuration;
+
+    protected function setUp()
+    {
+        $this->loader = new NmureEncryptorExtension();
+        $this->configuration = new ContainerBuilder();
+    }
+
+    protected function tearDown()
+    {
+        unset($this->loader);
+        unset($this->configuration);
+    }
+
     /**
      * @expectedException Symfony\Component\Config\Definition\Exception\InvalidConfigurationException
      */
     public function testEncryptorsArrayMustBeDefined()
     {
-        $loader = new NmureEncryptorExtension();
-        $config = array();
-        $loader->load(array($config), new ContainerBuilder());
+        $this->loader->load(array(array()), $this->configuration);
     }
 
     /**
@@ -24,11 +43,10 @@ class NmureEncryptorExtensionTest extends TestCase
      */
     public function testEncryptorsArrayMustNotBeEmpty()
     {
-        $loader = new NmureEncryptorExtension();
         $config = array(
             'encryptors' => array(),
         );
-        $loader->load(array($config), new ContainerBuilder());
+        $this->loader->load(array($config), $this->configuration);
     }
 
     /**
@@ -36,7 +54,6 @@ class NmureEncryptorExtensionTest extends TestCase
      */
     public function testSecretMustNotBeEmpty()
     {
-        $loader = new NmureEncryptorExtension();
         $config = array(
             'encryptors' => array(
                 'first_encryptor' => array(
@@ -44,7 +61,7 @@ class NmureEncryptorExtensionTest extends TestCase
                 ),
             ),
         );
-        $loader->load(array($config), new ContainerBuilder());
+        $this->loader->load(array($config), $this->configuration);
     }
 
     /**
@@ -52,13 +69,12 @@ class NmureEncryptorExtensionTest extends TestCase
      */
     public function testSecretMustBeDefined()
     {
-        $loader = new NmureEncryptorExtension();
         $config = array(
             'encryptors' => array(
                 'first_encryptor' => array(),
             ),
         );
-        $loader->load(array($config), new ContainerBuilder());
+        $this->loader->load(array($config), $this->configuration);
     }
 
     /**
@@ -67,81 +83,168 @@ class NmureEncryptorExtensionTest extends TestCase
      */
     public function testUnsupportedCipherMethod()
     {
-        $loader = new NmureEncryptorExtension();
         $config = array(
             'encryptors' => array(
                 'first_encryptor' => array(
-                    'secret' => 'iAmTheFirstSecretKey',
+                    'secret' => $this->secret,
                     'cipher' => 'unsupportedCipher',
                 ),
             ),
         );
-        $loader->load(array($config), new ContainerBuilder());
+        $this->loader->load(array($config), $this->configuration);
     }
 
     public function testValidConfiguration()
     {
-        $configuration = new ContainerBuilder();
-        $loader = new NmureEncryptorExtension();
         $config = array(
             'encryptors' => array(
                 'first_encryptor' => array(
-                    'secret' => 'iAmTheFirstSecretKey',
+                    'secret' => $this->secret,
                 ),
             ),
         );
-        $loader->load(array($config), $configuration);
-        $configuration->compile();
+        $this->loader->load(array($config), $this->configuration);
+        $this->configuration->compile();
 
-        $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\EncryptorInterface', $configuration->get('nmure_encryptor.first_encryptor'));
-        // default setting
-        $this->assertInstanceOf('Nmure\EncryptorBundle\Adapter\Base64Adapter', $configuration->get('nmure_encryptor.first_encryptor'));
+        $this->assertInstanceOf('Nmure\Encryptor\Encryptor', $this->configuration->get('nmure_encryptor.first_encryptor'));
+        // default settings
+        $this->assertInstanceOf('Nmure\Encryptor\Formatter\Base64Formatter', $this->configuration->get('nmure_encryptor.formatters.base64_formatter'));
+        $this->assertInstanceOf('Nmure\Encryptor\Formatter\HexFormatter', $this->configuration->get('nmure_encryptor.formatters.hex_formatter'));
     }
 
-    public function testPreferOriginalEncryptor()
+    /**
+     * @expectedException Symfony\Component\Config\Definition\Exception\InvalidConfigurationException
+     * @expectedExceptionMessage The secret key "not a valid hex key" is not a valid hex key
+     */
+    public function testConvertHexKeyToBinThrowsException()
     {
-        $configuration = new ContainerBuilder();
-        $loader = new NmureEncryptorExtension();
         $config = array(
             'encryptors' => array(
                 'first_encryptor' => array(
-                    'secret' => 'iAmTheFirstSecretKey',
-                    'prefer_base64' => false,
+                    'secret' => 'not a valid hex key',
+                    'convert_hex_key_to_bin' => true,
                 ),
             ),
         );
-        $loader->load(array($config), $configuration);
+        $this->loader->load(array($config), $this->configuration);
+    }
 
-        $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\EncryptorInterface', $configuration->get('nmure_encryptor.first_encryptor'));
-        $this->assertInstanceOf('Nmure\EncryptorBundle\Encryptor\Encryptor', $configuration->get('nmure_encryptor.first_encryptor'));
+    public function testConvertHexKeyToBin()
+    {
+        list($first, $second) = $this->getEncryptors(array(
+            'encryptors' => array(
+                'first_encryptor' => array(
+                    'secret' => $this->secret,
+                    'convert_hex_key_to_bin' => true,
+                ),
+                'second_encryptor' => array(
+                    'secret' => hex2bin($this->secret),
+                ),
+            ),
+        ));
+
+        $first->disableAutoIvUpdate();
+        $second->disableAutoIvUpdate();
+        $first->setIv($second->generateIv());
+        $this->assertEquals($first->getIv(), $second->getIv());
+        $this->assertEquals($first->encrypt($this->data), $second->encrypt($this->data));
+    }
+
+    public function testDisableAutoIVUpdate()
+    {
+        list($first, $second) = $this->getEncryptors(array(
+            'encryptors' => array(
+                'first_encryptor' => array(
+                    'secret' => $this->secret,
+                ),
+                'second_encryptor' => array(
+                    'secret' => $this->secondSecret,
+                    'disable_auto_iv_update' => true,
+                ),
+            ),
+        ));
+
+        // auto IV update should be enabled by default
+        $enc11 = $first->encrypt($this->data);
+        $iv11 = $first->getIv();
+        $enc12 = $first->encrypt($this->data);
+        $iv12 = $first->getIv();
+        $this->assertNotEquals($enc11, $enc12);
+        $this->assertNotEquals($iv11, $iv12);
+
+        // we disabled the auto IV update in the config
+        // for this encryptor
+        $enc21 = $second->encrypt($this->data);
+        $iv21 = $second->getIv();
+        $enc22 = $second->encrypt($this->data);
+        $iv22 = $second->getIv();
+        $this->assertEquals($enc21, $enc22);
+        $this->assertEquals($iv21, $iv22);
+    }
+
+    public function testFormattersUsage()
+    {
+        list($first, $second) = $this->getEncryptors(array(
+            'encryptors' => array(
+                'first_encryptor' => array(
+                    'secret' => $this->secret,
+                    'formatter' => 'nmure_encryptor.formatters.base64_formatter',
+                ),
+                'second_encryptor' => array(
+                    'secret' => $this->secondSecret,
+                    'convert_hex_key_to_bin' => true,
+                    'formatter' => 'nmure_encryptor.formatters.hex_formatter',
+                ),
+            ),
+        ));
+
+        $first2 = new Encryptor($this->secret, $this->cipher);
+        $first2->setFormatter(new Base64Formatter());
+        $first->disableAutoIvUpdate();
+        $first2->disableAutoIvUpdate();
+        $first->setIv($first2->generateIv());
+        $this->assertEquals($first->encrypt($this->data), $first2->encrypt($this->data));
+
+        $second2 = new Encryptor(hex2bin($this->secondSecret), $this->cipher);
+        $second2->setFormatter(new HexFormatter());
+        $second->disableAutoIvUpdate();
+        $second2->disableAutoIvUpdate();
+        $second->setIv($second2->generateIv());
+        $this->assertEquals($second->encrypt($this->data), $second2->encrypt($this->data));
     }
 
     public function testMultipleEncryptorsDeclaration()
     {
-        $configuration = new ContainerBuilder();
-        $loader = new NmureEncryptorExtension();
-        $config = array(
+        list($first, $second) = $this->getEncryptors(array(
             'encryptors' => array(
                 'first_encryptor' => array(
-                    'secret' => 'iAmTheFirstSecretKey',
+                    'secret' => $this->secret,
                 ),
                 'second_encryptor' => array(
-                    'secret' => 'iAmTheSecondSecretKey',
+                    'secret' => $this->secondSecret,
                 ),
             ),
-        );
-        $loader->load(array($config), $configuration);
-
-        $first = $configuration->get('nmure_encryptor.first_encryptor');
-        $second = $configuration->get('nmure_encryptor.second_encryptor');
+        ));
 
         // assert two encryptor instances of the same class
-        $this->assertFalse($first === $second);
-        $this->assertTrue(get_class($first) === get_class($second));
+        $this->assertNotEquals(spl_object_hash($first), spl_object_hash($second));
+        $this->assertEquals(get_class($first), get_class($second));
 
         // assert secret key is different
-        $data = 'Lorem ipsum dolor';
-        $second->setIv($first->getIv());
-        $this->assertNotEquals($first->encrypt($data), $second->encrypt($data));
+        $first->disableAutoIvUpdate();
+        $second->disableAutoIvUpdate();
+        $first->setIv($second->generateIv());
+        $this->assertEquals($first->getIv(), $second->getIv());
+        $this->assertNotEquals($first->encrypt($this->data), $second->encrypt($this->data));
+    }
+
+    private function getEncryptors(array $config)
+    {
+        $this->loader->load(array($config), $this->configuration);
+
+        return array(
+            $this->configuration->get('nmure_encryptor.first_encryptor'),
+            $this->configuration->get('nmure_encryptor.second_encryptor'),
+        );
     }
 }

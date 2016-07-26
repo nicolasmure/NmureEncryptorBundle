@@ -99,7 +99,7 @@ Must contain at least one encryptor.
     - `my_encryptor` : creates a new encryptor service named `nmure_encryptor.my_encryptor`.
         - `secret` : string, **required**. The secret encryption key.
         - `cipher` : string, optional. The cipher method (default to `AES-256-CBC`).
-        - `convert_hex_key_to_bin` : boolean, optional. Indicates if the hex secret key given below
+        - `turn_hex_key_to_bin` : boolean, optional. Indicates if the hex secret key given above
         should be converted to a binary key. This could be useful when [sharing encrypted data
         with C# apps](https://github.com/nicolasmure/NmureEncryptor#using-the-hexformatter-with-a-c-app "Using the HexFormatter with a C# app")
         for instance.

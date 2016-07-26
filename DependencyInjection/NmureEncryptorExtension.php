@@ -7,6 +7,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 /**
@@ -41,21 +42,20 @@ class NmureEncryptorExtension extends Extension
     {
         $this->assertSupportedCipher($settings['cipher']);
 
-        if (isset($settings['convert_hex_key_to_bin']) && $settings['convert_hex_key_to_bin']) {
-            $settings['secret'] = $this->convertHexKeyToBin($settings['secret']);
-        }
-
-        $serviceName = sprintf('nmure_encryptor.%s', $name);
-        $container->register($serviceName, 'Nmure\Encryptor\Encryptor')
+        $definition = $container->register(sprintf('nmure_encryptor.%s', $name), 'Nmure\Encryptor\Encryptor')
             ->addArgument($settings['secret'])
             ->addArgument($settings['cipher']);
 
         if (isset($settings['formatter'])) {
-            $this->configureFormatter($serviceName, $settings['formatter'], $container);
+            $this->configureFormatter($definition, $settings['formatter'], $container);
         }
 
         if (isset($settings['disable_auto_iv_update']) && $settings['disable_auto_iv_update']) {
-            $this->disableAutoIvUpdate($serviceName, $container);
+            $definition->addMethodCall('disableAutoIvUpdate');
+        }
+
+        if (isset($settings['turn_hex_key_to_bin']) && $settings['turn_hex_key_to_bin']) {
+            $definition->addMethodCall('turnHexKeyToBin');
         }
     }
 
@@ -79,48 +79,19 @@ class NmureEncryptorExtension extends Extension
     }
 
     /**
-     * Converts the secret hex key to a binary key if specified.
-     *
-     * @param  string $secret The secret key to convert.
-     *
-     * @throws InvalidConfigurationException When not able to convert the key.
-     */
-    private function convertHexKeyToBin($secret)
-    {
-        if (false === ($converted = @hex2bin($secret))) {
-            throw new InvalidConfigurationException(sprintf('The secret key "%s" is not a valid hex key', $secret));
-        }
-
-        return $converted;
-    }
-
-    /**
      * Configure and set the formatter to the current encryptor.
      *
-     * @param  string           $encryptorName Encryptor's service name
+     * @param  Definition       $definition    Encryptor's service Definition
      * @param  string           $formatterName Formatter's service name
      * @param  ContainerBuilder $container
      *
      * @throws Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException When not able to find the formatter's service.
      */
-    private function configureFormatter($encryptorName, $formatterName, ContainerBuilder $container)
+    private function configureFormatter(Definition $definition, $formatterName, ContainerBuilder $container)
     {
         // throws an exception if the formatter's service does not exists
         $container->getDefinition($formatterName);
 
-        $container->getDefinition($encryptorName)
-            ->addMethodCall('setFormatter', array(new Reference($formatterName)));
-    }
-
-    /**
-     * Disable the automatic IV update for the current encryptor.
-     *
-     * @param  string           $encryptorName Encryptor's service name.
-     * @param  ContainerBuilder $container
-     */
-    private function disableAutoIvUpdate($encryptorName, ContainerBuilder $container)
-    {
-        $container->getDefinition($encryptorName)
-            ->addMethodCall('disableAutoIvUpdate');
+        $definition->addMethodCall('setFormatter', array(new Reference($formatterName)));
     }
 }

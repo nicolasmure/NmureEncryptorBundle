@@ -112,40 +112,27 @@ class NmureEncryptorExtensionTest extends TestCase
         $this->assertInstanceOf('Nmure\Encryptor\Formatter\HexFormatter', $this->configuration->get('nmure_encryptor.formatters.hex_formatter'));
     }
 
-    /**
-     * @expectedException Symfony\Component\Config\Definition\Exception\InvalidConfigurationException
-     * @expectedExceptionMessage The secret key "not a valid hex key" is not a valid hex key
-     */
-    public function testConvertHexKeyToBinThrowsException()
+    public function testTurnHexKeyToBin()
     {
         $config = array(
             'encryptors' => array(
                 'first_encryptor' => array(
-                    'secret' => 'not a valid hex key',
-                    'convert_hex_key_to_bin' => true,
+                    'secret' => $this->secret,
+                    'turn_hex_key_to_bin' => true,
                 ),
             ),
         );
         $this->loader->load(array($config), $this->configuration);
-    }
+        $this->configuration->compile();
 
-    public function testConvertHexKeyToBin()
-    {
-        list($first, $second) = $this->getEncryptors(array(
-            'encryptors' => array(
-                'first_encryptor' => array(
-                    'secret' => $this->secret,
-                    'convert_hex_key_to_bin' => true,
-                ),
-                'second_encryptor' => array(
-                    'secret' => hex2bin($this->secret),
-                ),
-            ),
-        ));
+        $first = $this->configuration->get('nmure_encryptor.first_encryptor');
+        $second = new Encryptor($this->secret, $this->cipher);
 
+        $second->turnHexKeyToBin();
         $first->disableAutoIvUpdate();
         $second->disableAutoIvUpdate();
         $first->setIv($second->generateIv());
+
         $this->assertEquals($first->getIv(), $second->getIv());
         $this->assertEquals($first->encrypt($this->data), $second->encrypt($this->data));
     }
@@ -192,7 +179,7 @@ class NmureEncryptorExtensionTest extends TestCase
                 ),
                 'second_encryptor' => array(
                     'secret' => $this->secondSecret,
-                    'convert_hex_key_to_bin' => true,
+                    'turn_hex_key_to_bin' => true,
                     'formatter' => 'nmure_encryptor.formatters.hex_formatter',
                 ),
             ),
@@ -205,7 +192,8 @@ class NmureEncryptorExtensionTest extends TestCase
         $first->setIv($first2->generateIv());
         $this->assertEquals($first->encrypt($this->data), $first2->encrypt($this->data));
 
-        $second2 = new Encryptor(hex2bin($this->secondSecret), $this->cipher);
+        $second2 = new Encryptor($this->secondSecret, $this->cipher);
+        $second2->turnHexKeyToBin();
         $second2->setFormatter(new HexFormatter());
         $second->disableAutoIvUpdate();
         $second2->disableAutoIvUpdate();

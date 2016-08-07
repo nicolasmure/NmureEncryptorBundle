@@ -5,8 +5,6 @@
 
 A Symfony Bundle for the [nmure/encryptor](https://github.com/nicolasmure/NmureEncryptor "PHP data encryptor using open_ssl") library.
 
-**Warning:** This Bundle is still under development and shouldn't be used in production yet.
-
 ## Table of contents
 
 - [Introduction](#introduction)
@@ -35,7 +33,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require nmure/encryptor-bundle "~0.3.0"
+$ composer require nmure/encryptor-bundle "~1.0.0"
 ```
 
 This command requires you to have Composer installed globally, as explained

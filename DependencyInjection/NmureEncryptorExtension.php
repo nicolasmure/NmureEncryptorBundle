@@ -44,7 +44,9 @@ class NmureEncryptorExtension extends Extension
 
         $definition = $container->register(sprintf('nmure_encryptor.%s', $name), 'Nmure\Encryptor\Encryptor')
             ->addArgument($settings['secret'])
-            ->addArgument($settings['cipher']);
+            ->addArgument($settings['cipher'])
+            ->setPublic(true)
+        ;
 
         if (isset($settings['formatter'])) {
             $this->configureFormatter($definition, $settings['formatter'], $container);

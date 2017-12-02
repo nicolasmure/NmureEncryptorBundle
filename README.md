@@ -33,6 +33,11 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
+$ composer require nmure/encryptor-bundle "~2.0.0"
+```
+
+For Symfony < 4.0, run
+```bash
 $ composer require nmure/encryptor-bundle "~1.0.0"
 ```
 
@@ -114,6 +119,8 @@ The bundle wraps the lib's [formatters](https://github.com/nicolasmure/NmureEncr
 into services that you can use when configuring your encryptors :
 - [`Base64Formatter`](https://github.com/nicolasmure/NmureEncryptor#base64formatter "Nmure\Encryptor\Formatter\Base64Formatter") => `nmure_encryptor.formatters.base64_formatter`
 - [`HexFormatter`](https://github.com/nicolasmure/NmureEncryptor#hexformatter "Nmure\Encryptor\Formatter\HexFormatter") => `nmure_encryptor.formatters.hex_formatter`
+
+**Note** : If you use Symfony >= 4.0, these services will be declared as `private`.
 
 ## Informations
 

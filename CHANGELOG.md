@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.0 (2017-12-02)
+Symfony 4 support.
+
+**BC breaks** :
+- The built-in [formatters](/README.md#formatters) services are now
+declared as `private`.
+- Symfony 4 is now the minimum requirement, as PHP 7.1.
+
 ## v1.0.0 (2016-08-07)
 Integration of the [nmure/encryptor](https://github.com/nicolasmure/NmureEncryptor "PHP data encryptor using open_ssl") library.
 First stable release. BC break with the previous dev versions.

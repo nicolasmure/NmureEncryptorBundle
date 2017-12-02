@@ -107,9 +107,6 @@ class NmureEncryptorExtensionTest extends TestCase
         $this->configuration->compile();
 
         $this->assertInstanceOf('Nmure\Encryptor\Encryptor', $this->configuration->get('nmure_encryptor.first_encryptor'));
-        // default settings
-        $this->assertInstanceOf('Nmure\Encryptor\Formatter\Base64Formatter', $this->configuration->get('nmure_encryptor.formatters.base64_formatter'));
-        $this->assertInstanceOf('Nmure\Encryptor\Formatter\HexFormatter', $this->configuration->get('nmure_encryptor.formatters.hex_formatter'));
     }
 
     public function testTurnHexKeyToBin()
